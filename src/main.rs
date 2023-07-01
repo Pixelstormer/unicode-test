@@ -41,28 +41,37 @@ fn print(chars: &[char]) {
 fn iterate(chars: &[char]) {
     assert!(!chars.is_empty(), "Chars must not be empty");
 
-    let mut iters: Vec<std::iter::Peekable<std::slice::Iter<char>>> = vec![chars.iter().peekable()];
-
-    let mut string = String::new();
+    let mut iters: Vec<std::slice::Iter<char>> = vec![chars.iter()];
+    let mut encoded: Vec<[u8; 4]> = vec![[0; 4]];
+    let mut stdout = stdout().lock();
 
     loop {
         'block: {
-            for i in &mut iters {
-                i.next();
-                match i.peek() {
-                    None => *i = chars.iter().peekable(),
-                    Some(_) => break 'block,
+            for (iter, value) in iters.iter_mut().zip(encoded.iter_mut()) {
+                match iter.next() {
+                    Some(&new_value) => {
+                        value.fill(0);
+                        new_value.encode_utf8(value);
+                        break 'block;
+                    }
+                    None => {
+                        *iter = chars.iter();
+                        value.fill(0);
+                        unsafe { iter.next().unwrap_unchecked() }.encode_utf8(value);
+                    }
                 }
             }
-            iters.push(chars.iter().peekable());
+            let mut new_iter = chars.iter();
+            let mut new_value = [0; 4];
+            new_iter.next().unwrap().encode_utf8(&mut new_value);
+            iters.push(new_iter);
+            encoded.push(new_value);
         }
 
-        string.clear();
-        for i in iters.iter_mut().rev() {
-            string.push(**i.peek().unwrap());
+        for &byte in encoded.iter().flatten().filter(|&&byte| byte != 0) {
+            stdout.write_all(&[byte]).unwrap();
         }
-
-        println!("{string}");
+        stdout.write_all(&[b'\n']).unwrap();
     }
 }
 
