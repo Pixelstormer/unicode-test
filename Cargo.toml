@@ -1,0 +1,9 @@
+[package]
+name = "unicode-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+unicode-intervals = "0.2"
+rand = "0.8"
+
