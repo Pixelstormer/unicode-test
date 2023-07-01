@@ -1,3 +1,5 @@
+use std::env::args;
+
 use rand::prelude::{thread_rng, SliceRandom};
 use unicode_intervals::UnicodeCategory;
 
@@ -13,8 +15,13 @@ fn main() {
         .map(|i| char::from_u32(i).unwrap())
         .collect::<Vec<_>>();
 
-    //iterate(&chars);
-    generate(&chars, 128);
+    match args().last() {
+        Some(string) if string == "iterate" => iterate(&chars),
+        Some(string) if string == "random" => random(&chars, 64),
+        _ => println!(
+            "Enter 'iterate' to iterate over chars in order or 'random' to output random chars"
+        ),
+    }
 }
 
 fn iterate(chars: &[char]) {
@@ -43,7 +50,7 @@ fn iterate(chars: &[char]) {
     }
 }
 
-fn generate(chars: &[char], len: usize) {
+fn random(chars: &[char], len: usize) {
     let mut string = String::with_capacity(len);
     let mut rng = thread_rng();
 
